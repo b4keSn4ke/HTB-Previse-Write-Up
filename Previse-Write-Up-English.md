@@ -1,7 +1,7 @@
 # Previse Write-up (English Version)
 
 This is my write-up about **Previse** which is an active Linux box on **Hack The Box** having the IP Address `10.10.11.104`.<br>
-I really had fun completing this box and as you will see further on, it covers one of the **OWASP** top 10 vulnerability.<br><br>
+I really had fun completing this box and as you will see that we can't always blindly trust our web browsers.<br><br>
 
 ![Previse-Card](img/Previse-Card.png)
 
