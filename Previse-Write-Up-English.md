@@ -489,7 +489,7 @@ If it would have been a real life scenario, there are some ways we could have mi
 ### PHP Back-end
 ---
 Here the developers who have built the back-end, should not have enforced `redirection` on restricted resources, they only should have configured the HTTP server
-to return an HTTP code 403 instead, which would have denied us to create a user in the fist place.
+to return an `HTTP code 403` instead, which would have denied us to create a user in the first place.
 
 ### PHP File - logs. php
 ---
